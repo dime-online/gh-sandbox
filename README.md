@@ -42,6 +42,16 @@ Deleting needs the `delete_repo` scope:
 
     gh auth refresh -h github.com -s delete_repo
 
+## Shell completion
+
+For bash, source the completion file from `~/.bashrc`:
+
+    source /path/to/gh-sandbox/completions/gh-sandbox.bash
+
+For zsh, add the `completions` directory to your `fpath` (and run `compinit`):
+
+    fpath=(/path/to/gh-sandbox/completions $fpath)
+
 ## License
 
 MIT — see [LICENSE](LICENSE).
