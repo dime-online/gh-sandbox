@@ -128,6 +128,40 @@ else
   ok "create without a name exits non-zero"
 fi
 
+# --- cli: destroy --stale ---------------------------------------------------
+out=$(./gh-sandbox -n destroy --stale 5 2>&1)
+case "$out" in
+  *"[dry-run] gh repo delete testuser/sandbox-one --yes"*)
+    ok "destroy --stale 5 deletes the week-old sandbox" ;;
+  *) bad "destroy --stale 5: $out" ;;
+esac
+case "$out" in
+  *sandbox-two*) bad "destroy --stale 5 must skip the fresh sandbox" ;;
+  *) ok "destroy --stale 5 skips the fresh sandbox" ;;
+esac
+
+out=$(./gh-sandbox -n destroy --stale 1 2>&1)
+n=$(printf '%s\n' "$out" | grep -c 'gh repo delete testuser/sandbox-')
+[ "$n" -eq 2 ] && ok "destroy --stale 1 deletes both sandboxes" \
+             || bad "destroy --stale 1 should delete 2, got $n: $out"
+
+out=$(./gh-sandbox -n destroy --stale 30 2>&1)
+case "$out" in
+  *"No sandboxes older than 30 days"*) ok "destroy --stale 30 finds nothing" ;;
+  *) bad "destroy --stale 30: $out" ;;
+esac
+
+if ./gh-sandbox -n destroy --stale abc >/dev/null 2>&1; then
+  bad "destroy --stale with a non-number exits non-zero"
+else
+  ok "destroy --stale with a non-number exits non-zero"
+fi
+if ./gh-sandbox -n destroy --stale >/dev/null 2>&1; then
+  bad "destroy --stale without days exits non-zero"
+else
+  ok "destroy --stale without days exits non-zero"
+fi
+
 # --- cli: list filters to the sandbox- prefix ------------------------------
 out=$(./gh-sandbox list)
 case "$out" in

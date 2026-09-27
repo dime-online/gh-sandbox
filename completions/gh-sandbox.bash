@@ -6,7 +6,11 @@ _gh_sandbox() {
 
   if [ "$COMP_CWORD" -eq 1 ]; then
     COMPREPLY=( $(compgen -W "create list open rename destroy help" -- "$cur") )
-  elif [ "$prev" = "destroy" ] || [ "$prev" = "open" ] || [ "$prev" = "rename" ]; then
+  elif [ "$prev" = "destroy" ]; then
+    names=$(gh repo list --limit 1000 --json name \
+              --jq '.[] | select(.name | startswith("sandbox-")) | .name' 2>/dev/null)
+    COMPREPLY=( $(compgen -W "$names --stale --yes" -- "$cur") )
+  elif [ "$prev" = "open" ] || [ "$prev" = "rename" ]; then
     names=$(gh repo list --limit 1000 --json name \
               --jq '.[] | select(.name | startswith("sandbox-")) | .name' 2>/dev/null)
     COMPREPLY=( $(compgen -W "$names" -- "$cur") )

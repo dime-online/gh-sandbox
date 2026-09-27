@@ -17,6 +17,17 @@ fi
 if [ "$1 $2" = "repo list" ]; then
   filtered=$(printf '%s\n' "$raw" | grep '^sandbox-')
   case "$*" in
+    *fromdateiso8601*)
+      # gh's jq evaluates (now - updatedAt) > 86400*N against the live
+      # clock. Freeze time at 2026-09-27T00:00:00Z, where sandbox-two is
+      # about 2 days old and sandbox-one about 7, so N alone decides.
+      days=$(printf '%s\n' "$*" | sed -n 's/.*86400 \* \([0-9]\{1,\}\).*/\1/p')
+      case $days in ''|*[!0-9]*) days=0 ;; esac
+      filtered=''
+      [ "$days" -le 1 ] && filtered=$'sandbox-two\nsandbox-one'
+      [ "$days" -ge 2 ] && [ "$days" -le 6 ] && filtered=sandbox-one
+      [ -n "$filtered" ] && printf '%s\n' "$filtered"
+      ;;
     *@tsv*)
       printf '%s\n' "$filtered" ;;
     *)

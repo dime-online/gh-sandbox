@@ -22,6 +22,7 @@ Requires [gh](https://cli.github.com/) (authenticated) and git.
     gh sandbox open <name>
     gh sandbox rename <old> <new>
     gh sandbox destroy <name> [--yes]
+    gh sandbox destroy --stale <days> [--yes]
 
 ### Examples
 
@@ -31,6 +32,7 @@ Requires [gh](https://cli.github.com/) (authenticated) and git.
     gh sandbox list
     gh sandbox rename actions-test ci-demo
     gh sandbox destroy actions-test --yes
+    gh sandbox destroy --stale 14 --yes
 
 Add `-n` / `--dry-run` before the command to print what would run instead of
 running it:
@@ -41,8 +43,9 @@ running it:
 
 A sandbox is just an ordinary repo whose name starts with `sandbox-`. `list`
 and `destroy` match that prefix and nothing else, so the tool cannot delete a
-repository that was not created as a sandbox. `destroy` asks for confirmation
-unless you pass `--yes`.
+repository that was not created as a sandbox — `destroy --stale` bulk cleanup
+is bound by the same rule. `destroy` asks for confirmation (once, listing
+everything it found) unless you pass `--yes`.
 
 Deleting needs the `delete_repo` scope:
 
