@@ -8,7 +8,7 @@
 
 set -euo pipefail
 
-VERSION="0.2.0"
+VERSION="0.3.0"
 PREFIX="sandbox-"
 DRY_RUN=0
 OWNER=""
