@@ -37,6 +37,7 @@ Commands:
       --template <repo>        create from a template repository
   list [--json]            List your sandboxes: name, visibility, last push
   open <name>              Open a sandbox in your browser
+  rename <old> <new>       Rename OWNER/sandbox-<old> to sandbox-<new>
   destroy <name>           Delete OWNER/sandbox-<name>; --yes skips the prompt
   help                     Show this help
 
@@ -129,6 +130,19 @@ cmd_open() {
   run gh browse --repo "$OWNER/$name"
 }
 
+cmd_rename() {
+  [ $# -ge 1 ] || die "rename: missing <old>"
+  [ $# -ge 2 ] || die "rename: missing <new>"
+  valid_name "$1" || die "invalid repository name: $1"
+  valid_name "$2" || die "invalid repository name: $2"
+  local old new
+  old=$(prefixed "$1")
+  new=$(prefixed "$2")
+  [ "$old" != "$new" ] || die "rename: old and new names are the same"
+  run gh repo rename "$new" --repo "$OWNER/$old" --yes
+  if [ "$DRY_RUN" -eq 0 ]; then note "Renamed $OWNER/$old to $new"; fi
+}
+
 cmd_destroy() {
   [ $# -ge 1 ] || die "destroy: missing <name>"
   valid_name "$1" || die "invalid repository name: $1"
@@ -176,6 +190,7 @@ main() {
     create)  cmd_create  "$@" ;;
     list)    cmd_list    "$@" ;;
     open)    cmd_open    "$@" ;;
+    rename)  cmd_rename  "$@" ;;
     destroy) cmd_destroy "$@" ;;
     *)       usage >&2; die "unknown command: $cmd" ;;
   esac

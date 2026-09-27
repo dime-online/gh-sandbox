@@ -20,6 +20,7 @@ Requires [gh](https://cli.github.com/) (authenticated) and git.
     gh sandbox create <name> [--public] [--clone] [--add-readme] [--description <text>] [--template <repo>]
     gh sandbox list [--json]
     gh sandbox open <name>
+    gh sandbox rename <old> <new>
     gh sandbox destroy <name> [--yes]
 
 ### Examples
@@ -28,6 +29,7 @@ Requires [gh](https://cli.github.com/) (authenticated) and git.
     gh sandbox create pages-demo --public --description "throwaway pages test"
     gh sandbox create workflow-demo --add-readme --clone
     gh sandbox list
+    gh sandbox rename actions-test ci-demo
     gh sandbox destroy actions-test --yes
 
 Add `-n` / `--dry-run` before the command to print what would run instead of
