@@ -11,7 +11,7 @@ _gh_sandbox() {
               --jq '.[] | select(.name | startswith("sandbox-")) | .name' 2>/dev/null)
     COMPREPLY=( $(compgen -W "$names" -- "$cur") )
   elif [ "$prev" = "--template" ]; then
-    COMPREPLY=( $(compgen -W "--public --clone --description --yes" -- "$cur") )
+    COMPREPLY=( $(compgen -W "--public --clone --add-readme --description --yes" -- "$cur") )
   fi
 }
 complete -F _gh_sandbox gh-sandbox
