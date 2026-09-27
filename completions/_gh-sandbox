@@ -1,0 +1,17 @@
+#compdef gh-sandbox
+# zsh completion for gh-sandbox
+_gh-sandbox() {
+  if (( CURRENT == 2 )); then
+    _values 'command' \
+      'create[create a new sandbox repository]' \
+      'list[list existing sandboxes]' \
+      'destroy[delete a sandbox repository]' \
+      'help[show help]'
+    return
+  fi
+  _arguments '--public[make the sandbox public]' \
+             '--description[short description for the repo]:text:' \
+             '--template[create from a template repository]:repo:' \
+             '--yes[skip the confirmation prompt]'
+}
+_gh-sandbox "$@"
