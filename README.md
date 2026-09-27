@@ -17,7 +17,7 @@ Requires [gh](https://cli.github.com/) (authenticated) and git.
 
 ## Usage
 
-    gh sandbox create <name> [--public] [--clone] [--description <text>] [--template <repo>]
+    gh sandbox create <name> [--public] [--clone] [--add-readme] [--description <text>] [--template <repo>]
     gh sandbox list [--json]
     gh sandbox open <name>
     gh sandbox destroy <name> [--yes]
@@ -26,6 +26,7 @@ Requires [gh](https://cli.github.com/) (authenticated) and git.
 
     gh sandbox create actions-test
     gh sandbox create pages-demo --public --description "throwaway pages test"
+    gh sandbox create workflow-demo --add-readme --clone
     gh sandbox list
     gh sandbox destroy actions-test --yes
 

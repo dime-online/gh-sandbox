@@ -19,6 +19,7 @@ _gh-sandbox() {
   fi
   _arguments '--public[make the sandbox public]' \
              '--clone[clone the new sandbox afterwards]' \
+             '--add-readme[initialise the repo with an empty README]' \
              '--description[short description for the repo]:text:' \
              '--template[create from a template repository]:repo:' \
              '--yes[skip the confirmation prompt]'

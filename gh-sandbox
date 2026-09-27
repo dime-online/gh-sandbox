@@ -32,6 +32,7 @@ Commands:
   create <name>            Create OWNER/sandbox-<name> (private by default)
       --public                 make the sandbox public
       --clone                  clone the new sandbox afterwards
+      --add-readme             initialise the repo with an empty README
       --description <text>     short description for the repo
       --template <repo>        create from a template repository
   list [--json]            List your sandboxes: name, visibility, last push
@@ -66,13 +67,14 @@ valid_name() {
 cmd_create() {
   [ $# -ge 1 ] || die "create: missing <name>"
   valid_name "$1" || die "invalid repository name: $1"
-  local name visibility=--private description= template= clone=0
+  local name visibility=--private description= template= clone=0 add_readme=0
   name=$(prefixed "$1")
   shift
   while [ $# -gt 0 ]; do
     case $1 in
       --public)      visibility=--public ;;
       --clone)       clone=1 ;;
+      --add-readme)  add_readme=1 ;;
       --description)
         [ $# -ge 2 ] || die "--description needs a value"
         description=$2; shift ;;
@@ -86,6 +88,7 @@ cmd_create() {
 
   local args=(repo create "$OWNER/$name" "$visibility")
   if [ "$clone" -eq 1 ];       then args+=(--clone); fi
+  if [ "$add_readme" -eq 1 ];  then args+=(--add-readme); fi
   if [ -n "$description" ];    then args+=(--description "$description"); fi
   if [ -n "$template" ];       then args+=(--template "$template"); fi
   run gh "${args[@]}"
