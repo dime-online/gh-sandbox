@@ -1,5 +1,7 @@
 # gh-sandbox
 
+[![CI](https://github.com/dime-online/gh-sandbox/actions/workflows/ci.yml/badge.svg)](https://github.com/dime-online/gh-sandbox/actions/workflows/ci.yml)
+
 A [gh CLI](https://cli.github.com/) extension for disposable sandbox repositories.
 
 `gh sandbox create ci-test` gives you a fresh private repo (`<you>/sandbox-ci-test`)
