@@ -18,6 +18,26 @@ source ./gh-sandbox
 [ "$(prefixed sandbox-demo)" = "sandbox-demo" ] \
   && ok "prefixed keeps an existing prefix" || bad "prefixed keeps an existing prefix"
 
+# --- unit: valid_name() ----------------------------------------------------
+if valid_name demo-1_2.3; then ok "valid_name accepts safe names"; else bad "valid_name accepts safe names"; fi
+if valid_name '' || valid_name .hidden || valid_name 'two words' || valid_name 'a/b'; then
+  bad "valid_name rejects unsafe names"
+else
+  ok "valid_name rejects unsafe names"
+fi
+
+# --- cli: bad names fail before any gh call --------------------------------
+if ./gh-sandbox -n create 'two words' >/dev/null 2>&1; then
+  bad "create with a bad name exits non-zero"
+else
+  ok "create with a bad name exits non-zero"
+fi
+if ./gh-sandbox -n destroy 'a/b' --yes >/dev/null 2>&1; then
+  bad "destroy with a bad name exits non-zero"
+else
+  ok "destroy with a bad name exits non-zero"
+fi
+
 # --- cli: version, help ----------------------------------------------------
 out=$(./gh-sandbox --version)
 [ "$out" = "gh-sandbox $VERSION" ] && ok "--version matches VERSION" || bad "--version: $out"
