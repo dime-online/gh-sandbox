@@ -55,6 +55,16 @@ For zsh, add the `completions` directory to your `fpath` (and run `compinit`):
 
     fpath=(/path/to/gh-sandbox/completions $fpath)
 
+## Development
+
+The test suite runs offline against a small gh stub:
+
+    make test      # or: bash tests/run.sh
+    make check     # syntax pass over the scripts
+
+`make install` honours `PREFIX` (default `/usr/local`) and `DESTDIR`.
+See [CHANGELOG.md](CHANGELOG.md) for release notes.
+
 ## License
 
 MIT — see [LICENSE](LICENSE).
