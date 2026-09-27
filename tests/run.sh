@@ -71,6 +71,13 @@ case "$out" in
   *) bad "dry-run destroy: $out" ;;
 esac
 
+out=$(./gh-sandbox -n open tmp)
+case "$out" in
+  *"[dry-run] gh browse --repo testuser/sandbox-tmp"*)
+    ok "dry-run open prefixes the name" ;;
+  *) bad "dry-run open: $out" ;;
+esac
+
 # --- cli: errors -----------------------------------------------------------
 if ./gh-sandbox bogus >/dev/null 2>&1; then
   bad "unknown command exits non-zero"
