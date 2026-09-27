@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+# Minimal gh stub so the test suite runs offline and hermetically.
+# It answers the exact calls gh-sandbox makes, applying the same
+# sandbox- prefix filter that gh's --jq applies in production.
+raw='sandbox-two	PUBLIC	2026-09-25T09:00:00Z
+sandbox-one	PRIVATE	2026-09-20T10:00:00Z
+real-repo	PUBLIC	2026-09-01T10:00:00Z'
+
+if [ "$1 $2" = "api user" ]; then
+  case "$*" in
+    *--jq*) printf '%s\n' 'testuser' ;;
+    *)      printf '%s\n' '{"login":"testuser"}' ;;
+  esac
+  exit 0
+fi
+
+if [ "$1 $2" = "repo list" ]; then
+  filtered=$(printf '%s\n' "$raw" | grep '^sandbox-')
+  case "$*" in
+    *@tsv*)
+      printf '%s\n' "$filtered" ;;
+    *)
+      sep='['
+      while IFS=$'\t' read -r name visibility updatedAt; do
+        [ -n "$name" ] || continue
+        printf '%s{"name":"%s","visibility":"%s","updatedAt":"%s"}' "$sep" "$name" "$visibility" "$updatedAt"
+        sep=','
+      done <<< "$filtered"
+      printf ']\n' ;;
+  esac
+  exit 0
+fi
+
+printf 'gh %s\n' "$*"
+exit 0
