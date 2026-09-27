@@ -7,11 +7,12 @@ _gh-sandbox() {
       'create[create a new sandbox repository]' \
       'list[list existing sandboxes]' \
       'open[open a sandbox in the browser]' \
+      'rename[rename a sandbox repository]' \
       'destroy[delete a sandbox repository]' \
       'help[show help]'
     return
   fi
-  if [[ $words[2] == (open|destroy) && $CURRENT == 3 ]]; then
+  if [[ $words[2] == (open|destroy|rename) && $CURRENT == 3 ]]; then
     sandboxes=(${(f)"$(gh repo list --limit 1000 --json name \
       --jq '.[] | select(.name | startswith("sandbox-")) | .name' 2>/dev/null)"})
     (( ${#sandboxes[@]} )) && _describe 'sandbox' sandboxes

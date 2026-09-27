@@ -12,6 +12,8 @@ bad() { fail=$((fail + 1)); printf 'FAIL %s\n' "$1"; }
 
 # --- unit: prefixed() (sourcing runs nothing thanks to the main guard) -----
 source ./gh-sandbox
+# The script under test sets -e; a test harness must survive failing commands.
+set +e +o pipefail
 
 [ "$(prefixed demo)" = "sandbox-demo" ] \
   && ok "prefixed adds the prefix" || bad "prefixed adds the prefix"
@@ -83,6 +85,36 @@ case "$out" in
     ok "dry-run open prefixes the name" ;;
   *) bad "dry-run open: $out" ;;
 esac
+
+# --- cli: rename ------------------------------------------------------------
+out=$(./gh-sandbox -n rename old-name new-name)
+case "$out" in
+  *"[dry-run] gh repo rename sandbox-new-name --repo testuser/sandbox-old-name --yes"*)
+    ok "dry-run rename prefixes both names" ;;
+  *) bad "dry-run rename: $out" ;;
+esac
+
+out=$(./gh-sandbox -n rename sandbox-keep sandbox-keep 2>&1)
+case "$out" in
+  *"old and new names are the same"*) ok "rename to the same name fails" ;;
+  *) bad "rename to the same name: $out" ;;
+esac
+
+if ./gh-sandbox -n rename 'two words' other >/dev/null 2>&1; then
+  bad "rename with a bad old name exits non-zero"
+else
+  ok "rename with a bad old name exits non-zero"
+fi
+if ./gh-sandbox -n rename old 'a/b' >/dev/null 2>&1; then
+  bad "rename with a bad new name exits non-zero"
+else
+  ok "rename with a bad new name exits non-zero"
+fi
+if ./gh-sandbox -n rename only-one >/dev/null 2>&1; then
+  bad "rename without a new name exits non-zero"
+else
+  ok "rename without a new name exits non-zero"
+fi
 
 # --- cli: errors -----------------------------------------------------------
 if ./gh-sandbox bogus >/dev/null 2>&1; then
