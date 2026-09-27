@@ -23,6 +23,7 @@ _gh-sandbox() {
              '--add-readme[initialise the repo with an empty README]' \
              '--description[short description for the repo]:text:' \
              '--template[create from a template repository]:repo:' \
+             '--stale[delete sandboxes idle for more than N days]:days:' \
              '--yes[skip the confirmation prompt]'
 }
 _gh-sandbox "$@"

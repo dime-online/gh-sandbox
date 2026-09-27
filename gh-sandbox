@@ -39,6 +39,8 @@ Commands:
   open <name>              Open a sandbox in your browser
   rename <old> <new>       Rename OWNER/sandbox-<old> to sandbox-<new>
   destroy <name>           Delete OWNER/sandbox-<name>; --yes skips the prompt
+      --stale <days>         instead: delete every sandbox idle for more
+                             than <days> days (same confirmation)
   help                     Show this help
 
 Options:
@@ -46,7 +48,8 @@ Options:
   --version                Print the version
 
 A sandbox is an ordinary repo whose name starts with "sandbox-".
-list and destroy match that prefix and nothing else.
+list and destroy match that prefix and nothing else, and destroy
+--stale can only ever match it too.
 EOF
 }
 
@@ -144,6 +147,10 @@ cmd_rename() {
 }
 
 cmd_destroy() {
+  if [ "${1:-}" = "--stale" ]; then
+    cmd_destroy_stale "${@:2}"
+    return 0
+  fi
   [ $# -ge 1 ] || die "destroy: missing <name>"
   valid_name "$1" || die "invalid repository name: $1"
   local name assume_yes=0 reply
@@ -167,6 +174,49 @@ cmd_destroy() {
   fi
   run gh repo delete "$OWNER/$name" --yes
   if [ "$DRY_RUN" -eq 0 ]; then note "Deleted $OWNER/$name"; fi
+}
+
+# Delete every sandbox whose last push is older than N days. The age
+# comparison runs in gh's jq (now - updatedAt), so no date(1) portability
+# headaches on Linux versus macOS.
+cmd_destroy_stale() {
+  [ $# -ge 1 ] || die "destroy --stale needs a number of days"
+  local days=$1 assume_yes=0 reply stale name count
+  case $days in
+    ''|*[!0-9]*) die "destroy --stale needs a number of days: $days" ;;
+  esac
+  shift
+  while [ $# -gt 0 ]; do
+    case $1 in
+      --yes|-y) assume_yes=1 ;;
+      *) die "destroy: unknown option: $1" ;;
+    esac
+    shift
+  done
+
+  stale=$(gh repo list "$OWNER" --limit 1000 --json name,updatedAt \
+          --jq ".[] | select(.name | startswith(\"$PREFIX\"))
+                | select((now - (.updatedAt | fromdateiso8601)) > 86400 * $days)
+                | .name") || die "could not list repositories"
+  [ -n "$stale" ] || { note "No sandboxes older than $days days."; return 0; }
+
+  printf 'Sandboxes idle for more than %s days:\n' "$days"
+  for name in $stale; do printf '  %s\n' "$name"; done
+  if [ "$assume_yes" -eq 0 ] && [ "$DRY_RUN" -eq 0 ]; then
+    printf 'Delete them all? [y/N] '
+    read -r reply || true
+    case $reply in
+      y|Y|yes|YES) ;;
+      *) die "aborted" ;;
+    esac
+  fi
+  for name in $stale; do
+    run gh repo delete "$OWNER/$name" --yes
+  done
+  if [ "$DRY_RUN" -eq 0 ]; then
+    count=$(printf '%s\n' "$stale" | wc -l)
+    note "Deleted $count sandboxes."
+  fi
 }
 
 main() {
