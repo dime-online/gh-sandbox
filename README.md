@@ -19,6 +19,7 @@ Requires [gh](https://cli.github.com/) (authenticated) and git.
 
     gh sandbox create <name> [--public] [--clone] [--description <text>] [--template <repo>]
     gh sandbox list [--json]
+    gh sandbox open <name>
     gh sandbox destroy <name> [--yes]
 
 ### Examples
