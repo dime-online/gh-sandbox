@@ -1,15 +1,24 @@
 #compdef gh-sandbox
 # zsh completion for gh-sandbox
 _gh-sandbox() {
+  local -a sandboxes
   if (( CURRENT == 2 )); then
     _values 'command' \
       'create[create a new sandbox repository]' \
       'list[list existing sandboxes]' \
+      'open[open a sandbox in the browser]' \
       'destroy[delete a sandbox repository]' \
       'help[show help]'
     return
   fi
+  if [[ $words[2] == (open|destroy) && $CURRENT == 3 ]]; then
+    sandboxes=(${(f)"$(gh repo list --limit 1000 --json name \
+      --jq '.[] | select(.name | startswith("sandbox-")) | .name' 2>/dev/null)"})
+    (( ${#sandboxes[@]} )) && _describe 'sandbox' sandboxes
+    return
+  fi
   _arguments '--public[make the sandbox public]' \
+             '--clone[clone the new sandbox afterwards]' \
              '--description[short description for the repo]:text:' \
              '--template[create from a template repository]:repo:' \
              '--yes[skip the confirmation prompt]'
