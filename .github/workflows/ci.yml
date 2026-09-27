@@ -14,6 +14,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Syntax check
-        run: bash -n gh-sandbox
-      - name: Tests
-        run: bash tests/run.sh
+        run: |
+          bash -n gh-sandbox
+          bash -n tests/run.sh
+          bash -n tests/bin/gh
+          bash -n completions/gh-sandbox.bash
+      - name: Makefile targets
+        run: |
+          make check
+          make test
