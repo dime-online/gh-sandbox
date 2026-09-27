@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.3.0 — 2026-09-27
+- Add `create --add-readme` so a new sandbox starts with a commit
+- Add a `rename` command instead of delete-and-recreate
+- Add `destroy --stale <days>` to sweep sandboxes idle for more than N
+  days, with one confirmation listing everything it found
+- Keep the test harness from inheriting `errexit` from the script under
+  test, so a failing command fails the test instead of the suite
+
 ## 0.2.0 — 2026-09-27
 - Add an offline test suite (runs against a gh stub, no network) and CI on
   ubuntu and macOS
