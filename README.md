@@ -1,2 +1,47 @@
 # gh-sandbox
-gh CLI extension to create, list and delete disposable sandbox repositories
+
+A [gh CLI](https://cli.github.com/) extension for disposable sandbox repositories.
+
+`gh sandbox create ci-test` gives you a fresh private repo (`<you>/sandbox-ci-test`)
+to break things in; `gh sandbox destroy ci-test` takes it away again. Handy when
+you want to try a workflow, an Action, a branch protection rule or a webhook
+without polluting your real projects.
+
+## Install
+
+    gh extension install dime-online/gh-sandbox
+
+Requires [gh](https://cli.github.com/) (authenticated) and git.
+
+## Usage
+
+    gh sandbox create <name> [--public] [--description <text>] [--template <repo>]
+    gh sandbox list
+    gh sandbox destroy <name> [--yes]
+
+### Examples
+
+    gh sandbox create actions-test
+    gh sandbox create pages-demo --public --description "throwaway pages test"
+    gh sandbox list
+    gh sandbox destroy actions-test --yes
+
+Add `-n` / `--dry-run` before the command to print what would run instead of
+running it:
+
+    gh sandbox -n create scratch
+
+## Safety
+
+A sandbox is just an ordinary repo whose name starts with `sandbox-`. `list`
+and `destroy` match that prefix and nothing else, so the tool cannot delete a
+repository that was not created as a sandbox. `destroy` asks for confirmation
+unless you pass `--yes`.
+
+Deleting needs the `delete_repo` scope:
+
+    gh auth refresh -h github.com -s delete_repo
+
+## License
+
+MIT — see [LICENSE](LICENSE).

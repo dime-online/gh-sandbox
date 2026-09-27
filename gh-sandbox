@@ -1,0 +1,148 @@
+#!/usr/bin/env bash
+#
+# gh-sandbox — manage disposable GitHub sandbox repositories.
+#
+# A sandbox is an ordinary repository whose name starts with "sandbox-".
+# The prefix is the contract: list and destroy only ever match it, so the
+# tool cannot touch real repositories.
+
+set -euo pipefail
+
+VERSION="0.1.0"
+PREFIX="sandbox-"
+DRY_RUN=0
+OWNER=""
+
+die()  { printf 'gh-sandbox: %s\n' "$*" >&2; exit 1; }
+note() { printf '%s\n' "$*"; }
+
+run() {
+  if [ "$DRY_RUN" -eq 1 ]; then
+    printf '[dry-run] %s\n' "$*"
+  else
+    "$@"
+  fi
+}
+
+usage() {
+  cat <<'EOF'
+Usage: gh sandbox <command> [options]
+
+Commands:
+  create <name>            Create OWNER/sandbox-<name> (private by default)
+      --public                 make the sandbox public
+      --description <text>     short description for the repo
+      --template <repo>        create from a template repository
+  list                     List your sandboxes: name, visibility, last push
+  destroy <name>           Delete OWNER/sandbox-<name>; --yes skips the prompt
+  help                     Show this help
+
+Options:
+  -n, --dry-run            Print what would run instead of running it
+  --version                Print the version
+
+A sandbox is an ordinary repo whose name starts with "sandbox-".
+list and destroy match that prefix and nothing else.
+EOF
+}
+
+prefixed() {
+  case $1 in
+    "$PREFIX"*) printf '%s\n' "$1" ;;
+    *)          printf '%s\n' "$PREFIX$1" ;;
+  esac
+}
+
+cmd_create() {
+  [ $# -ge 1 ] || die "create: missing <name>"
+  local name visibility=--private description= template=
+  name=$(prefixed "$1")
+  shift
+  while [ $# -gt 0 ]; do
+    case $1 in
+      --public)      visibility=--public ;;
+      --description)
+        [ $# -ge 2 ] || die "--description needs a value"
+        description=$2; shift ;;
+      --template)
+        [ $# -ge 2 ] || die "--template needs a value"
+        template=$2; shift ;;
+      *) die "create: unknown option: $1" ;;
+    esac
+    shift
+  done
+
+  local args=(repo create "$OWNER/$name" "$visibility")
+  if [ -n "$description" ]; then args+=(--description "$description"); fi
+  if [ -n "$template" ];    then args+=(--template "$template"); fi
+  run gh "${args[@]}"
+  if [ "$DRY_RUN" -eq 0 ]; then note "Created $OWNER/$name"; fi
+}
+
+cmd_list() {
+  local out
+  out=$(gh repo list "$OWNER" --limit 1000 \
+        --json name,visibility,updatedAt \
+        --jq "map(select(.name | startswith(\"$PREFIX\")))
+              | sort_by(.updatedAt) | reverse
+              | .[] | [.name, .visibility, .updatedAt] | @tsv")
+  if [ -z "$out" ]; then
+    note "No sandboxes yet."
+    return 0
+  fi
+  printf '%s\n' "$out" | while IFS=$'\t' read -r name visibility updated; do
+    printf '%-34s %-8s %s\n' "$name" "$visibility" "${updated%%[T+]*}"
+  done
+}
+
+cmd_destroy() {
+  [ $# -ge 1 ] || die "destroy: missing <name>"
+  local name assume_yes=0 reply
+  name=$(prefixed "$1")
+  shift
+  while [ $# -gt 0 ]; do
+    case $1 in
+      --yes|-y) assume_yes=1 ;;
+      *) die "destroy: unknown option: $1" ;;
+    esac
+    shift
+  done
+
+  if [ "$assume_yes" -eq 0 ] && [ "$DRY_RUN" -eq 0 ]; then
+    printf 'Delete %s/%s and everything in it? [y/N] ' "$OWNER" "$name"
+    read -r reply || true
+    case $reply in
+      y|Y|yes|YES) ;;
+      *) die "aborted" ;;
+    esac
+  fi
+  run gh repo delete "$OWNER/$name" --yes
+  if [ "$DRY_RUN" -eq 0 ]; then note "Deleted $OWNER/$name"; fi
+}
+
+main() {
+  while [ $# -gt 0 ]; do
+    case $1 in
+      -n|--dry-run)     DRY_RUN=1; shift ;;
+      --version)        note "gh-sandbox $VERSION"; exit 0 ;;
+      -h|--help|help)   usage; exit 0 ;;
+      *)                break ;;
+    esac
+  done
+
+  [ $# -ge 1 ] || { usage >&2; exit 1; }
+  local cmd=$1
+  shift
+
+  command -v gh >/dev/null 2>&1 || die "gh is required: https://cli.github.com"
+  OWNER=$(gh api user --jq .login) || die "could not read the gh login"
+
+  case $cmd in
+    create)  cmd_create  "$@" ;;
+    list)    cmd_list    "$@" ;;
+    destroy) cmd_destroy "$@" ;;
+    *)       usage >&2; die "unknown command: $cmd" ;;
+  esac
+}
+
+main "$@"
