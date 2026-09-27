@@ -31,6 +31,7 @@ Usage: gh sandbox <command> [options]
 Commands:
   create <name>            Create OWNER/sandbox-<name> (private by default)
       --public                 make the sandbox public
+      --clone                  clone the new sandbox afterwards
       --description <text>     short description for the repo
       --template <repo>        create from a template repository
   list [--json]            List your sandboxes: name, visibility, last push
@@ -64,12 +65,13 @@ valid_name() {
 cmd_create() {
   [ $# -ge 1 ] || die "create: missing <name>"
   valid_name "$1" || die "invalid repository name: $1"
-  local name visibility=--private description= template=
+  local name visibility=--private description= template= clone=0
   name=$(prefixed "$1")
   shift
   while [ $# -gt 0 ]; do
     case $1 in
       --public)      visibility=--public ;;
+      --clone)       clone=1 ;;
       --description)
         [ $# -ge 2 ] || die "--description needs a value"
         description=$2; shift ;;
@@ -82,8 +84,9 @@ cmd_create() {
   done
 
   local args=(repo create "$OWNER/$name" "$visibility")
-  if [ -n "$description" ]; then args+=(--description "$description"); fi
-  if [ -n "$template" ];    then args+=(--template "$template"); fi
+  if [ "$clone" -eq 1 ];       then args+=(--clone); fi
+  if [ -n "$description" ];    then args+=(--description "$description"); fi
+  if [ -n "$template" ];       then args+=(--template "$template"); fi
   run gh "${args[@]}"
   if [ "$DRY_RUN" -eq 0 ]; then note "Created $OWNER/$name"; fi
 }
