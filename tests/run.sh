@@ -58,6 +58,12 @@ case "$out" in
   *) bad "dry-run create --public: $out" ;;
 esac
 
+out=$(./gh-sandbox -n create demo --clone)
+case "$out" in
+  *"testuser/sandbox-demo --private --clone"*) ok "dry-run create --clone" ;;
+  *) bad "dry-run create --clone: $out" ;;
+esac
+
 out=$(./gh-sandbox -n destroy tmp --yes)
 case "$out" in
   *"[dry-run] gh repo delete testuser/sandbox-tmp --yes"*)
