@@ -68,5 +68,15 @@ case "$out" in
   *) ok "list hides non-sandboxes" ;;
 esac
 
+out=$(./gh-sandbox list --json)
+case "$out" in
+  *'"name":"sandbox-one"'*) ok "list --json emits json" ;;
+  *) bad "list --json: $out" ;;
+esac
+case "$out" in
+  *real-repo*) bad "list --json must not show non-sandboxes" ;;
+  *) ok "list --json hides non-sandboxes" ;;
+esac
+
 printf '\n%d passed, %d failed\n' "$pass" "$fail"
 [ "$fail" -eq 0 ]

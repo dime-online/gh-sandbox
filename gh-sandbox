@@ -33,7 +33,7 @@ Commands:
       --public                 make the sandbox public
       --description <text>     short description for the repo
       --template <repo>        create from a template repository
-  list                     List your sandboxes: name, visibility, last push
+  list [--json]            List your sandboxes: name, visibility, last push
   destroy <name>           Delete OWNER/sandbox-<name>; --yes skips the prompt
   help                     Show this help
 
@@ -80,12 +80,22 @@ cmd_create() {
 }
 
 cmd_list() {
+  local json=0
+  if [ "${1:-}" = "--json" ]; then
+    json=1
+    shift
+  fi
+  local filter="map(select(.name | startswith(\"$PREFIX\")))
+                 | sort_by(.updatedAt) | reverse"
+  if [ "$json" -eq 1 ]; then
+    gh repo list "$OWNER" --limit 1000 \
+      --json name,visibility,updatedAt --jq "$filter"
+    return 0
+  fi
   local out
   out=$(gh repo list "$OWNER" --limit 1000 \
         --json name,visibility,updatedAt \
-        --jq "map(select(.name | startswith(\"$PREFIX\")))
-              | sort_by(.updatedAt) | reverse
-              | .[] | [.name, .visibility, .updatedAt] | @tsv")
+        --jq "$filter | .[] | [.name, .visibility, .updatedAt] | @tsv")
   if [ -z "$out" ]; then
     note "No sandboxes yet."
     return 0
